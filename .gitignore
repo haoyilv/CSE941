@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.zip
+*.sqlite
+models/
+data/
+results/logs/
+results/step4_*features.jsonl
+slurm-*.out

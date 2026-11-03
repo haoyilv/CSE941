@@ -1,0 +1,49 @@
+{
+  "method": "frozen Gemma 4 26B A4B final-token question vector + trained linear classifier",
+  "input": "2021 jurisdiction + question text; no statute evidence",
+  "target": "Yes=1, No=0",
+  "split_seed": 20261103,
+  "split_group_key": "question_group",
+  "feature_width": 2816,
+  "epochs": 100,
+  "learning_rate": 0.01,
+  "weight_decay": 0.01,
+  "final_train_loss": 0.2636277675628662,
+  "train": {
+    "n": 5476,
+    "yes": 1868,
+    "no": 3608,
+    "correct": 4913,
+    "accuracy": 0.8971877282688093,
+    "balanced_accuracy": 0.8702158420260473,
+    "yes_precision": 0.9005524861878453,
+    "yes_recall": 0.7853319057815846,
+    "yes_f1": 0.839004861309694,
+    "confusion": {
+      "tp": 1467,
+      "tn": 3446,
+      "fp": 162,
+      "fn": 401
+    },
+    "majority_class_accuracy": 0.6588750913075238
+  },
+  "test": {
+    "n": 1377,
+    "yes": 546,
+    "no": 831,
+    "correct": 919,
+    "accuracy": 0.6673928830791576,
+    "balanced_accuracy": 0.6324070033456315,
+    "yes_precision": 0.6052631578947368,
+    "yes_recall": 0.4633699633699634,
+    "yes_f1": 0.524896265560166,
+    "confusion": {
+      "tp": 253,
+      "tn": 666,
+      "fp": 165,
+      "fn": 293
+    },
+    "majority_class_accuracy": 0.6034858387799564
+  },
+  "comparison_warning": "Internal split of the public benchmark test collection; not comparable to published test accuracy."
+}
