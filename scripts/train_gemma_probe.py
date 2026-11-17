@@ -12,8 +12,9 @@ import torch
 from housing_data import read_examples
 
 
-def read_vectors(path: Path) -> dict[int, torch.Tensor]:
+def read_vectors(path: Path) -> tuple[dict[int, torch.Tensor], dict]:
     vectors = {}
+    feature_settings = None
     with path.open() as source:
         for line in source:
             if not line.strip():
@@ -27,7 +28,17 @@ def read_vectors(path: Path) -> dict[int, torch.Tensor]:
             if len(packed) != width * 2:
                 raise ValueError(f"Wrong feature length for {idx}")
             vectors[idx] = torch.tensor(struct.unpack(f"<{width}e", packed), dtype=torch.float32)
-    return vectors
+            settings = {
+                "evidence_mode": row.get("evidence_mode", "none"),
+                "max_input_tokens": row.get("max_input_tokens"),
+                "max_passages": row.get("max_passages"),
+                "max_passage_chars": row.get("max_passage_chars"),
+            }
+            if feature_settings is None:
+                feature_settings = settings
+            elif settings != feature_settings:
+                raise ValueError("Feature extraction settings differ across rows")
+    return vectors, feature_settings or {}
 
 
 def evaluate(model: torch.nn.Module, x: torch.Tensor, y: torch.Tensor) -> dict:
@@ -70,7 +81,7 @@ def main() -> None:
     torch.manual_seed(20261103)
     examples = {row["idx"]: row for row in read_examples(args.questions_zip)}
     split = json.loads(args.split.read_text())
-    vectors = read_vectors(args.features)
+    vectors, feature_settings = read_vectors(args.features)
     ids = [int(i) for i in split["train_ids"] + split["test_ids"]]
     missing = set(ids) - set(vectors)
     if missing:
@@ -105,8 +116,12 @@ def main() -> None:
         optimizer.step()
     model.eval()
     report = {
-        "method": "frozen Gemma 4 26B A4B final-token question vector + trained linear classifier",
-        "input": split["input"],
+        "method": "frozen Gemma 4 26B A4B final-token vector + trained linear classifier",
+        "input": (
+            split["input"] if feature_settings.get("evidence_mode") == "none"
+            else "2021 jurisdiction + question + bounded statutory evidence"
+        ),
+        "features": feature_settings,
         "target": split["target"],
         "split_seed": split["seed"],
         "split_group_key": split["group_key"],
@@ -121,6 +136,23 @@ def main() -> None:
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
+    predictions_path = args.output.with_name(
+        args.output.stem.removesuffix("_summary") + "_predictions.jsonl"
+    )
+    with predictions_path.open("w") as predictions_file, torch.no_grad():
+        for partition, x, ids in (
+            ("train", train_x, split["train_ids"]),
+            ("test", test_x, split["test_ids"]),
+        ):
+            probabilities = torch.sigmoid(model(x).squeeze(1)).tolist()
+            for idx, probability in zip(ids, probabilities):
+                predictions_file.write(json.dumps({
+                    "idx": idx,
+                    "partition": partition,
+                    "gold_answer": "Yes" if examples[idx]["label"] else "No",
+                    "prediction": "Yes" if probability >= 0.5 else "No",
+                    "probability_yes": probability,
+                }) + "\n")
     print(json.dumps(report, indent=2))
 
 

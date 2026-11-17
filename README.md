@@ -61,3 +61,21 @@ python3 scripts/train_gemma_probe.py --questions-zip /path/to/questions.json.zip
 account, virtual environment, model, and data paths on another cluster. Model
 weights, original data, and the 50 MB frozen-feature cache are intentionally
 excluded from Git.
+
+## Step 5: statutory evidence comparison
+
+Using the same internal split and frozen Gemma features, we trained separate
+linear heads on question-only, bounded annotated-statute, and top-10 BM25
+statute inputs. Test accuracy was **66.7%**, **65.1%**, and **69.0%**,
+respectively. BM25 input gave a net gain of 31 correct answers over the
+question-only input. BM25 retrieved every annotated statute ID for 16.5% of
+test questions. These are classifier results, not direct LLM legal answers;
+the evidence conditions also contain very different amounts of text.
+
+The [Step 5 report](docs/step5_evidence_comparison.md) gives the paired counts,
+retrieval diagnostics, and limitations. Summary files and per-question
+predictions are in `results/`. `scripts/build_index.py`,
+`scripts/evaluate_retrieval.py`, and `scripts/compare_step5.py` provide the
+retrieval and comparison code. The full statute index, retrieved text, and
+feature caches remain on HPCC because they are large and can be regenerated
+from the public dataset.

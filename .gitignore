@@ -6,4 +6,6 @@ models/
 data/
 results/logs/
 results/step4_*features.jsonl
+results/step5_*features.jsonl
+results/step5_bm25_top10.jsonl
 slurm-*.out

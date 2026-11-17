@@ -1,0 +1,73 @@
+{
+  "sample": "course-internal question-group-disjoint test split",
+  "n_test": 1377,
+  "conditions": {
+    "question_only": {
+      "correct": 919,
+      "n": 1377,
+      "accuracy": 0.6673928830791576
+    },
+    "gold_evidence": {
+      "correct": 897,
+      "n": 1377,
+      "accuracy": 0.6514161220043573
+    },
+    "bm25_evidence": {
+      "correct": 950,
+      "n": 1377,
+      "accuracy": 0.6899055918663762
+    }
+  },
+  "paired_test": {
+    "question_to_bm25": {
+      "a_wrong_b_correct": 246,
+      "a_correct_b_wrong": 215,
+      "both_correct": 704,
+      "both_wrong": 212,
+      "net_correct_gain": 31
+    },
+    "question_to_gold": {
+      "a_wrong_b_correct": 220,
+      "a_correct_b_wrong": 242,
+      "both_correct": 677,
+      "both_wrong": 238,
+      "net_correct_gain": -22
+    },
+    "bm25_to_gold": {
+      "a_wrong_b_correct": 206,
+      "a_correct_b_wrong": 259,
+      "both_correct": 691,
+      "both_wrong": 221,
+      "net_correct_gain": -53
+    }
+  },
+  "retrieval": {
+    "train": {
+      "n": 5476,
+      "at_least_one_annotated_in_top10": 2064,
+      "all_annotated_in_top10": 895,
+      "any_rate": 0.3769174579985391,
+      "all_rate": 0.16344046749452154
+    },
+    "test": {
+      "n": 1377,
+      "at_least_one_annotated_in_top10": 546,
+      "all_annotated_in_top10": 227,
+      "any_rate": 0.39651416122004357,
+      "all_rate": 0.16485112563543936
+    }
+  },
+  "bm25_answer_accuracy_by_annotated_hit": {
+    "true": {
+      "n": 546,
+      "correct": 364,
+      "accuracy": 0.6666666666666666
+    },
+    "false": {
+      "n": 831,
+      "correct": 586,
+      "accuracy": 0.7051744885679904
+    }
+  },
+  "caveat": "Gold-evidence is an oracle diagnostic; annotated ID overlap does not imply all decisive text was present. Evidence inputs are capped to ten passages of 400 characters each and 1536 total tokens."
+}
