@@ -38,14 +38,19 @@ def main() -> None:
     parser.add_argument("--split", type=Path, required=True)
     parser.add_argument("--question-predictions", type=Path, required=True)
     parser.add_argument("--gold-predictions", type=Path, required=True)
+    parser.add_argument("--bounded-gold-predictions", type=Path,
+                        help="Optional earlier capped annotated-evidence condition")
     parser.add_argument("--retrieved-predictions", type=Path, required=True)
     parser.add_argument("--retrieval", type=Path, required=True)
+    parser.add_argument("--gold-evidence-kind", choices=["bounded", "complete_excerpts"],
+                        default="bounded")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     split = json.loads(args.split.read_text())
     ids = [int(idx) for idx in split["test_ids"]]
     q = read_jsonl(args.question_predictions)
     g = read_jsonl(args.gold_predictions)
+    bounded = read_jsonl(args.bounded_gold_predictions) if args.bounded_gold_predictions else None
     r = read_jsonl(args.retrieved_predictions)
     retrieval = read_jsonl(args.retrieval)
     required = set(ids)
@@ -53,15 +58,27 @@ def main() -> None:
         missing = required - set(data)
         if missing:
             raise ValueError(f"{name} missing {len(missing)} test IDs")
+    if bounded is not None and required - set(bounded):
+        raise ValueError("Bounded gold predictions missing test IDs")
     for idx in ids:
         if {q[idx]["gold_answer"], g[idx]["gold_answer"], r[idx]["gold_answer"]} != {q[idx]["gold_answer"]}:
             raise ValueError(f"Gold answer mismatch for {idx}")
         if any(data[idx]["partition"] != "test" for data in (q, g, r)):
             raise ValueError(f"Non-test prediction for {idx}")
+        if bounded is not None and (
+            bounded[idx]["gold_answer"] != q[idx]["gold_answer"]
+            or bounded[idx]["partition"] != "test"
+        ):
+            raise ValueError(f"Bounded gold metadata mismatch for {idx}")
     conditions = {}
     for name, data in (("question_only", q), ("gold_evidence", g), ("bm25_evidence", r)):
         correct = sum(data[idx]["prediction"] == data[idx]["gold_answer"] for idx in ids)
         conditions[name] = {"correct": correct, "n": len(ids), "accuracy": correct / len(ids)}
+    if bounded is not None:
+        correct = sum(bounded[idx]["prediction"] == bounded[idx]["gold_answer"] for idx in ids)
+        conditions["bounded_gold_evidence"] = {
+            "correct": correct, "n": len(ids), "accuracy": correct / len(ids)
+        }
     retrieval_stats = {}
     for partition in ("train", "test"):
         part_ids = [int(idx) for idx in split[f"{partition}_ids"]]
@@ -86,6 +103,7 @@ def main() -> None:
         }
     report = {
         "sample": "course-internal question-group-disjoint test split",
+        "gold_evidence_kind": args.gold_evidence_kind,
         "n_test": len(ids),
         "conditions": conditions,
         "paired_test": {
@@ -95,8 +113,14 @@ def main() -> None:
         },
         "retrieval": retrieval_stats,
         "bm25_answer_accuracy_by_annotated_hit": answer_by_hit,
-        "caveat": "Gold-evidence is an oracle diagnostic; annotated ID overlap does not imply all decisive text was present. Evidence inputs are capped to ten passages of 400 characters each and 1536 total tokens.",
+        "caveat": (
+            "Annotated excerpts were capped to ten passages of 400 characters and 1536 total tokens; this is not a complete-evidence result."
+            if args.gold_evidence_kind == "bounded" else
+            "All released annotated excerpts were supplied without truncation (up to 15 excerpts and 8192 tokens). These excerpts are reference evidence, not necessarily every relevant statute or the entire statutory section."
+        ),
     }
+    if bounded is not None:
+        report["paired_test"]["bounded_to_full_gold"] = paired(bounded, g, ids)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))

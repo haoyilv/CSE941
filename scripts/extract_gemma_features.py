@@ -56,6 +56,8 @@ def main() -> None:
     parser.add_argument("--retrieval", type=Path)
     parser.add_argument("--max-passages", type=int, default=10)
     parser.add_argument("--max-passage-chars", type=int, default=400)
+    parser.add_argument("--strict-untruncated", action="store_true",
+                        help="Fail if the assembled input exceeds max-input-tokens; never truncate it")
     parser.add_argument("--limit", type=int, help="smoke test on first N examples")
     args = parser.parse_args()
     if not torch.cuda.is_available():
@@ -103,10 +105,19 @@ def main() -> None:
                     texts.append(evidence_text(
                         example, passages, args.max_passages, args.max_passage_chars
                     ))
-            inputs = tokenizer(
-                texts, return_tensors="pt",
-                padding=True, truncation=True, max_length=args.max_input_tokens,
-            ).to(model.device)
+            if args.strict_untruncated:
+                inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=False)
+                lengths = inputs["attention_mask"].sum(dim=1).tolist()
+                if any(length > args.max_input_tokens for length in lengths):
+                    bad = [(example["idx"], length) for example, length in zip(batch, lengths)
+                           if length > args.max_input_tokens]
+                    raise ValueError(f"Inputs exceed {args.max_input_tokens} tokens: {bad}")
+            else:
+                inputs = tokenizer(
+                    texts, return_tensors="pt",
+                    padding=True, truncation=True, max_length=args.max_input_tokens,
+                )
+            inputs = inputs.to(model.device)
             hidden = model.model(**inputs, use_cache=False).last_hidden_state
             attention = inputs["attention_mask"]
             last_position = attention.shape[1] - 1 - attention.flip(dims=[1]).argmax(dim=1)
@@ -122,6 +133,7 @@ def main() -> None:
                     "max_input_tokens": args.max_input_tokens,
                     "max_passages": args.max_passages if args.evidence_mode != "none" else 0,
                     "max_passage_chars": args.max_passage_chars if args.evidence_mode != "none" else 0,
+                    "strict_untruncated": args.strict_untruncated,
                 }
                 output.write(json.dumps(record) + "\n")
             output.flush()

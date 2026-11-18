@@ -79,3 +79,32 @@ predictions are in `results/`. `scripts/build_index.py`,
 retrieval and comparison code. The full statute index, retrieved text, and
 feature caches remain on HPCC because they are large and can be regenerated
 from the public dataset.
+
+### Complete annotated-excerpt update
+
+We reran the annotated-evidence condition with **all released excerpts**, with
+no 400-character cap or input truncation. An independent audit verified all
+6,853 inputs and found zero truncated examples. Test accuracy rose from the
+earlier capped result of 65.1% to **69.6%** (959/1,377; Yes F1 60.2%). This is
+40 more correct answers than question-only and nine more than the BM25-input
+classifier. See the [complete-evidence report](docs/step5_complete_gold_results.md)
+and [`results/step5_gold_full_comparison.json`](results/step5_gold_full_comparison.json).
+
+## Direct QA and iterative retrieval
+
+`scripts/run_reasoning_eval.py` evaluates Gemma's generated Yes/No answers on
+the same 1,377 internal test questions with no evidence, the top ten local BM25
+statutes, or complete annotated excerpts. A structured prompt additionally
+asks for the controlling rule, its application, and evidence gaps. The first
+three direct-answer conditions are complete: **61.9%** without evidence,
+**67.8%** with one-shot BM25 evidence, and **79.7%** with complete annotated
+excerpts. The structured-answer conditions are still running. These numbers
+are distinct from the trained linear-probe results above.
+
+`scripts/generate_followup_queries.py` reads the first five BM25 statutes and
+asks Gemma for a targeted second search. `scripts/retrieve_followup.py`
+combines five first-hop and five new second-hop statutes. On the test questions,
+the number with at least one annotated ID in the ten passages increased from
+546 to 660; the number with all annotated IDs increased from 227 to 286.
+The effect on final answer accuracy is still being evaluated. The scripts and
+Slurm job files in `jobs/` reproduce these experiments on HPCC.

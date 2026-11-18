@@ -1,5 +1,7 @@
 # Step 5: Effect of statutory evidence on the trained HousingQA probe
 
+**Update:** The complete annotated-excerpt run supersedes the capped gold result below. See [complete-gold results](step5_complete_gold_results.md).
+
 ## Setup
 
 The 6,853 released HousingQA questions were split internally by `question_group` into 5,476 training and 1,377 test examples (seed 20261103). This is **not** the benchmark's official train/test split, and these scores must not be compared with published benchmark scores. The same split, frozen Gemma 4 26B A4B backbone, 2,816-dimensional final-token feature, and trained linear Yes/No classifier were used in all three conditions. Each condition has its own classifier fitted on the corresponding training features.

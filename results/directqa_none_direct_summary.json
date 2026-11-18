@@ -1,0 +1,26 @@
+{
+  "n": 1377,
+  "correct": 852,
+  "accuracy": 0.6187363834422658,
+  "invalid_or_missing": 0,
+  "label_counts": {
+    "Yes": 546,
+    "No": 831
+  },
+  "model_requested": [
+    "google/gemma-4-26B-A4B-it"
+  ],
+  "mode": [
+    "one_shot/none/direct"
+  ],
+  "yes_precision": 0.5140939597315436,
+  "yes_recall": 0.7014652014652014,
+  "yes_f1": 0.5933384972889233,
+  "balanced_accuracy": 0.6329227331032385,
+  "confusion": {
+    "tp": 383,
+    "tn": 469,
+    "fp": 362,
+    "fn_or_invalid_yes": 163
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "sample": "course-internal question-group-disjoint test split",
+  "gold_evidence_kind": "complete_excerpts",
+  "n_test": 1377,
+  "conditions": {
+    "question_only": {
+      "correct": 919,
+      "n": 1377,
+      "accuracy": 0.6673928830791576
+    },
+    "gold_evidence": {
+      "correct": 959,
+      "n": 1377,
+      "accuracy": 0.6964415395787945
+    },
+    "bm25_evidence": {
+      "correct": 950,
+      "n": 1377,
+      "accuracy": 0.6899055918663762
+    },
+    "bounded_gold_evidence": {
+      "correct": 897,
+      "n": 1377,
+      "accuracy": 0.6514161220043573
+    }
+  },
+  "paired_test": {
+    "question_to_bm25": {
+      "a_wrong_b_correct": 246,
+      "a_correct_b_wrong": 215,
+      "both_correct": 704,
+      "both_wrong": 212,
+      "net_correct_gain": 31
+    },
+    "question_to_gold": {
+      "a_wrong_b_correct": 258,
+      "a_correct_b_wrong": 218,
+      "both_correct": 701,
+      "both_wrong": 200,
+      "net_correct_gain": 40
+    },
+    "bm25_to_gold": {
+      "a_wrong_b_correct": 221,
+      "a_correct_b_wrong": 212,
+      "both_correct": 738,
+      "both_wrong": 206,
+      "net_correct_gain": 9
+    },
+    "bounded_to_full_gold": {
+      "a_wrong_b_correct": 226,
+      "a_correct_b_wrong": 164,
+      "both_correct": 733,
+      "both_wrong": 254,
+      "net_correct_gain": 62
+    }
+  },
+  "retrieval": {
+    "train": {
+      "n": 5476,
+      "at_least_one_annotated_in_top10": 2064,
+      "all_annotated_in_top10": 895,
+      "any_rate": 0.3769174579985391,
+      "all_rate": 0.16344046749452154
+    },
+    "test": {
+      "n": 1377,
+      "at_least_one_annotated_in_top10": 546,
+      "all_annotated_in_top10": 227,
+      "any_rate": 0.39651416122004357,
+      "all_rate": 0.16485112563543936
+    }
+  },
+  "bm25_answer_accuracy_by_annotated_hit": {
+    "true": {
+      "n": 546,
+      "correct": 364,
+      "accuracy": 0.6666666666666666
+    },
+    "false": {
+      "n": 831,
+      "correct": 586,
+      "accuracy": 0.7051744885679904
+    }
+  },
+  "caveat": "All released annotated excerpts were supplied without truncation (up to 15 excerpts and 8192 tokens). These excerpts are reference evidence, not necessarily every relevant statute or the entire statutory section."
+}

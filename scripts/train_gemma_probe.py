@@ -33,6 +33,7 @@ def read_vectors(path: Path) -> tuple[dict[int, torch.Tensor], dict]:
                 "max_input_tokens": row.get("max_input_tokens"),
                 "max_passages": row.get("max_passages"),
                 "max_passage_chars": row.get("max_passage_chars"),
+                "strict_untruncated": bool(row.get("strict_untruncated", False)),
             }
             if feature_settings is None:
                 feature_settings = settings
@@ -119,7 +120,12 @@ def main() -> None:
         "method": "frozen Gemma 4 26B A4B final-token vector + trained linear classifier",
         "input": (
             split["input"] if feature_settings.get("evidence_mode") == "none"
-            else "2021 jurisdiction + question + bounded statutory evidence"
+            else (
+                "2021 jurisdiction + question + complete annotated excerpts"
+                if feature_settings.get("evidence_mode") == "gold"
+                and feature_settings.get("strict_untruncated")
+                else "2021 jurisdiction + question + bounded statutory evidence"
+            )
         ),
         "features": feature_settings,
         "target": split["target"],
